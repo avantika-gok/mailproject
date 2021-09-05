@@ -1,0 +1,122 @@
+'''
+Notes regarding program:
+1. Please use a Gmail account as the sender's email
+2. The Gmail account must be configured with the following security settings in order for the email to successfully send:
+    1) Go into Google account settings and click on "Security"
+    2) Scroll down until the "Less secure app access" section
+    3) Click on "Turn on access (not recommended)"
+    4) Click so that "Allow less secure apps:" is "ON"
+    5) Google will send you an email confirming you have enabled access to less secure apps
+3. Please close GUI interface for email to send.
+4. Please also check spam folder for sent email in receiver's email account.
+5. This program can send emails across email platfoms (ex. Gmail to Yahoo), but sender's email must be a Gmail account
+6. Please open the contents of the email from a .txt file
+
+How to use program:
+1. When program is run, a GUI interface will appear
+2. In the "Sender's email" entry field, type the email address from which the email will be sent
+3. In the "Receiver's email" entry field, type the email address to which the email will be sent
+3. In the "Please enter password" entry field, type in the password of the sender's email account
+4. In the "From" entry field, type the name which you would like display as the sender's name in the email.
+5. In the "To" entry field, type the name which you would like display as the receiver's name in the email.
+6. In the "Subject of email" entry field, type in the subject of the email.
+7. Next, click on the "Open file" button. This will pull up a window that allows you to browse for a txt file stored on your computer.
+8. Select a file, and ensure that the file's contents appear in the window below the "Open file" button
+9. Next, click on the "Send email" button to send the email.
+10. Check the receiver's email inbox for the email. Please also check the spam or junk folder of the receiver's email.
+'''
+
+from tkinter import *
+from tkinter.filedialog import askopenfilename
+import smtplib, ssl
+
+port = 465
+
+class UserInterface:
+    def __init__(self):
+        '''This section of the program creates the GUI interface which the user uses to input information'''
+        window = Tk()
+        frame0 = Frame(window)
+
+        frame0.grid(row=1, column=1, sticky=W)
+        Label(frame0, text="Sender's email:").grid(row=1, column=2, sticky=W)
+        self.semail = StringVar()
+        Entry(frame0, textvariable=self.semail).grid(row=1, column=3)
+        Label(frame0, text="Reciever's email:").grid(row=2, column=2, sticky=W)
+        self.remail = StringVar()
+        Entry(frame0, textvariable=self.remail).grid(row=2, column=3)
+        Label(frame0, text="Please enter password: ").grid(row=3, column=2)
+        self.password = StringVar()
+        Entry(frame0, textvariable=self.password, show = "*").grid(row=3, column=3)
+
+        Label(frame0, text="From: ").grid(row=4, column=2, sticky=W)
+        self.personfrom = StringVar()
+        Entry(frame0, textvariable=self.personfrom).grid(row=4, column=3, sticky=W)
+
+        Label(frame0, text="To: ").grid(row=5, column=2, sticky=W)
+        self.personto = StringVar()
+        Entry(frame0, textvariable=self.personto).grid(row=5, column=3, sticky=W)
+
+        Label(frame0, text="Subject of email: ").grid(row=6, column=2, sticky=W)
+        self.subject = StringVar()
+        Entry(frame0, textvariable=self.subject).grid(row=6, column=3, sticky=W)
+
+
+
+        frame1 = Frame(window)
+        frame1.grid(row=3, column=1, sticky=W)
+        Message(frame1, width=250,
+                text="Use the open button below to open a txt file with contents to send in email").grid(row=3,column=1)
+        Button(frame1, text="Open file", command=self.openfile).grid(row=4, column=1, sticky=W)
+
+
+
+        frame2 = Frame(window)
+        frame2.grid(row=4, column=1)
+        scrollbar = Scrollbar(frame2)
+        scrollbar.pack(side=RIGHT, fill=Y)
+        self.text = Text(frame2, width=40, height=20,
+                         wrap=WORD, yscrollcommand=scrollbar.set)
+        self.text.pack()
+        scrollbar.config(command=self.text.yview)
+
+
+        frame3 = Frame(window)
+        frame3.grid(row=5, column=1)
+        Button(frame3, text="Send email", command=self.sendemail).grid(row=1, column=1)
+
+
+        window.mainloop()
+
+    '''This section of the program naviagates to the file and reads its contents'''
+    def openfile(self):
+        inputfile = askopenfilename()
+        self.infile = open(inputfile, "r")
+        s = self.infile.read()
+        self.text.insert(END, s)
+        self.content = s
+
+    '''This section of the program configures the connection with the SMTP server and sends the email'''
+    def sendemail(self):
+        port = 465
+        smtpserver = "smtp.gmail.com"
+        senderemail = self.semail.get()
+        receiveremail = self.remail.get()
+        print(receiveremail)
+        password = self.password.get()
+        subject = self.subject.get()
+        personfrom = self.personfrom.get()
+        personto = self.personto.get()
+        message = "From:" + personfrom + "\n" + "To:" + personto + "\n" + "Subject:" + subject + "\n" + self.content
+        print(message)
+
+        '''Following code from https://realpython.com/python-send-email/#sending-your-plain-text-email'''
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(smtpserver, port, context=context) as server:
+            server.login(senderemail, password)
+            server.sendmail(senderemail, receiveremail, message)
+
+UserInterface()
+
+
